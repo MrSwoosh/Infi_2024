@@ -1,0 +1,9 @@
+Je hebt met succes de data ontcijferd! Nu de lucht succesvol in kaart is gebracht, willen de elfjes weten hoeveel wolken er op dit moment zijn. Bij te veel wolken is het namelijk niet veilig voor de Kerstman om te vliegen.
+
+Voor elk blokje geldt dat het een wolk is als de sneeuwwaarde groter is dan 0. Het kan ook zijn dat een wolkenblokje onderdeel is van een grotere wolk. Een grotere wolk is een verzameling van aaneengesloten blokjes. Twee blokjes worden gezien als aaneengesloten wanneer ze een zijde delen. Bijvoorbeeld, een blokje op positie (0, 0, 0) en een blokje op positie (1, 0, 0) worden gezien als aaneengesloten. Een blokje op positie (0, 0, 0) en een blokje op positie (1, 1, 0) zijn niet aaneengesloten. Deze blokjes delen wel een ribbe, maar niet een zijde.
+
+Nog een voorbeeld; wanneer de blokjes op posities (0, 0, 0), (1, 0, 0) en (2, 0, 0) allemaal een sneeuwwaarde groter dan 0 hebben, worden ze gezien als 1 wolk.
+
+Gebruik de sneeuwwaardes uit deel 1 en tel het aantal wolken. Hoeveel wolken zijn er?
+
+Vul hieronder in de terminal je antwoord in.
