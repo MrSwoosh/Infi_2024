@@ -1,1 +1,196 @@
+# Notes vooraf:
+# Comments zijn met '#' genoteerd, omdat ik alle comments graag in dezelfde kleur zie
+# Puzzel is tussen werkzaamheden door gedaan en daarom is de code niet geoptimaliseerd.
 
+
+# PART 1
+# Voer assembly instructies uit voor iedere positie in een 3D lijst
+# met de x, y en z waarden als input
+
+
+# Afmetingen 3D list zijn bekend, dus kan op voorhand gemaakt worden
+grid = [[[x for x in range(30)] for y in range(30)] for z in range(30)]
+
+
+# Inlezen apart gehouden vanwege verantwoordelijkheidsprincipe voor functies
+all_instructions = []
+with open("input_infy", "r") as file:
+    for row in file:
+        row = row.strip()
+
+        all_instructions.append(row)
+
+
+# Check of er een literal of een referentie naar een register wordt gebruikt
+# en haal waarde op als het om een register gaat
+# Zet waarde om naar int, bij succes is het een literal, bij exception is het een referentie
+# Van exception op en gebruik om waarde uit register op te halen
+def get_value(instr, x, y, z):
+    value = instr[-1]
+    try:
+        value = int(value)
+    except ValueError:
+        if value == "x":
+            value = x
+        elif value == "y":
+            value = y
+        elif value == "z":
+            value = z
+    return value
+
+
+def process(x, y, z, instructions):
+    stack = []
+    counter = 0
+    while counter < len(instructions):
+        single_instruction = instructions[counter].split(" ")
+
+        match single_instruction[0]:
+            case "push":
+                # push [value] neemt value en zet het bovenop de stack.
+                # Value is een getal of een van de symbolen x, y, z.
+                # De waarden van x, y en z verschillen per blokje
+                # en zijn de coördinaten van het blokje in het 3D-raster.
+                value = get_value(single_instruction, x, y, z)
+                stack.append(value)
+            case "add":
+                # add haalt de twee bovenste getallen van de stack af,
+                # telt ze bij elkaar op en zet het resultaat bovenop de stack.
+                if len(stack) < 2:
+                    print("Stack is leeg")
+                    return None
+                else:
+                    first_value = stack.pop()
+                    second_value = stack.pop()
+                stack.append(first_value + second_value)
+            case "jmpos":
+                # jmpos is een standaard jump instructie
+                # trigger is een conditional op waarde van bovenste waarde van stack
+                # als value >= 0, dan verhoog counter met een value
+                offset = get_value(single_instruction, x, y, z)
+                top_value = stack.pop()  # haal bovenste van stack
+                if top_value >= 0:
+                    counter += offset
+            case "ret":
+                # ret is de laatste instructie die wordt uitgevoerd.
+                # Het programma stopt en het getal wat op dat moment bovenop
+                # de stack staat is de waarde voor het blokje.
+                return stack[-1]
+
+        counter += 1
+
+
+# Voer voor iedere positie in de 3D list de instructies uit
+def process_alle_posities():
+    for x in range(len(grid)):
+        for y in range(len(grid[x])):
+            for z in range(len(grid[x][y])):
+                grid[x][y][z] = process(x, y, z, all_instructions)
+
+
+# Som de waarden van alle elementen in de 3D lijst
+# Kan nog in een functie gezet worden
+def som_alle_waarden():
+    som_value = 0
+    for x in range(len(grid)):
+        for y in range(len(grid[x])):
+            for z in range(len(grid[x][y])):
+                som_value += grid[x][y][z]
+
+    return som_value
+
+
+# Voer voor iedere positie in 3D lijst de instructies uit
+process_alle_posities()
+
+# Som alle waarden in 3D lijst op
+final_value = som_alle_waarden()
+
+# Print uitkomst part 1
+print(f"Antwoord voor part 1: {final_value}")
+
+
+# PART 2
+# Waarden in de 3D list vormen clusters
+# Hoeveel clusters zijn er?
+# Benadering: flood/fill algoritme
+
+# Bijhouden welke posities al zijn bezocht
+# set O(1) ipv list O(n)
+visited = set()
+
+
+# Recursief algoritme om clusters te bepalen
+# Werkt niet bij grote clusters
+# Gekozen als eerste keuze omdat het makkelijker is om te schrijven dan DFS/BFS
+def flood(x, y, z):
+    if (x, y, z) in visited:
+        return
+
+    # Voeg huidige positie toe aan visited list
+    visited.add((x, y, z))
+
+    # X AS
+    # x + 1
+    # Check of volgende x waarde in grid zit
+    if 0 <= x + 1 <= len(grid) - 1:
+        # Check of volgende x waarde onderdeel is van een wolk
+        if grid[x+1][y][z] == 1:
+            # Roep functie aan op volgende x waarde
+            flood(x + 1, y, z)
+    # x - 1
+    # Check of volgende x waarde in grid zit
+    if 0 <= x - 1 <= len(grid) - 1:
+        # Check of volgende x waarde onderdeel is van een wolk
+        if grid[x-1][y][z] == 1:
+            # Roep functie aan op volgende x waarde
+            flood(x - 1, y, z)
+
+    # Y AS
+    # y + 1
+    if 0 <= y + 1 <= len(grid[x]) - 1:
+        if grid[x][y+1][z] == 1:
+            flood(x, y + 1, z)
+    # y - 1
+    if 0 <= y - 1 <= len(grid[x]) - 1:
+        if grid[x][y-1][z] == 1:
+            flood(x, y - 1, z)
+
+    # Z AS
+    # z + 1
+    if 0 <= z + 1 <= len(grid[x][y]) - 1:
+        if grid[x][y][z+1] == 1:
+            flood(x, y, z + 1)
+    # z - 1
+    if 0 <= z - 1 <= len(grid[x][y]) - 1:
+        if grid[x][y][z-1] == 1:
+            flood(x, y, z - 1)
+
+
+def zoek_wolken():
+    # Bijhouden hoeveel wolken er zijn
+    wolken = 0
+    # Itereer door x as
+    for x in range(len(grid)):
+        # Itereer door y as
+        for y in range(len(grid[x])):
+            # Itereer door z as
+            for z in range(len(grid[x][y])):
+                # Check of positie nog niet is bezocht
+                if (x, y, z) not in visited:
+                    # Check of positie onderdeel is van een wolk
+                    if grid[x][y][z] == 1:
+                        # Positie is nog niet bezocht en onderdeel van een wolk:
+                        # dus aantal_clouds + 1
+                        wolken += 1
+                        # en roep flood/fill functie aan
+                        flood(x, y, z)
+
+    return wolken
+
+
+# Zoek naar wolken clusters
+aantal_wolken = zoek_wolken()
+
+# Print uitkomst part 2
+print(f"Antwoord voor part 2: {aantal_wolken}")
